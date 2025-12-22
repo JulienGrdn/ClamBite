@@ -16,9 +16,19 @@ class ClamAVApp(Adw.Application):
 
     def do_activate(self):
         win = self.props.active_window
+        
         if not win:
+            # First launch: Pass the file to __init__
             win = MainWindow(self, self.target_file)
+        elif self.target_file:
+            # App already running: Manually pass the file to the existing window
+            if hasattr(win, 'handle_external_request'):
+                win.handle_external_request(self.target_file)
+        
         win.present()
+        
+        # Important: Clear the file so we don't re-scan it if you just click the dock icon later
+        self.target_file = None
 
     def do_open(self, files, n_files, hint):
         if n_files > 0:
