@@ -780,11 +780,12 @@ class MainWindow(Adw.Window):
         if not os.path.exists(path):
             return
 
+        self.present()
+        self.nav_view.pop_to_tag("home_page")
+
         is_folder = os.path.isdir(path)
         mode = 'scan_dir' if is_folder else 'scan_file'
         
-        self.present()
-
         if self.is_database_fresh():
             self.start_operation(mode, path)
         else:
