@@ -776,6 +776,20 @@ class MainWindow(Adw.Window):
         dialog.connect("response", on_response)
         dialog.show()
 
+    def handle_external_request(self, path):
+        if not os.path.exists(path):
+            return
+
+        is_folder = os.path.isdir(path)
+        mode = 'scan_dir' if is_folder else 'scan_file'
+        
+        self.present()
+
+        if self.is_database_fresh():
+            self.start_operation(mode, path)
+        else:
+            self.prompt_update_before_scan(mode, path)
+
     def is_database_fresh(self):
         base_dir = os.path.expanduser("~/.config/clambite")
         log_dir = os.path.join(base_dir, "logs")
