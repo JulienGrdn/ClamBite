@@ -70,7 +70,7 @@ Icon=clambite
 Terminal=false
 Type=Application
 Categories=Utility;System;Security;GTK;ClamAV,clam,virus
-StartupWMClass=com.github.JulienGrdn.ClamBite
+StartupWMClass=com.github.juliengrdn.clambite
 StartupNotify=true
 EOF
 
