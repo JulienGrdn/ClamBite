@@ -376,7 +376,7 @@ class DatabasePage(Adw.NavigationPage):
 
     def _create_db_row(self, group, title):
         row = Adw.ActionRow(title=title)
-        row.set_icon_name("server-database-symbolic")
+        row.set_icon_name("network-server-symbolic")
         lbl = Gtk.Label(label="...")
         lbl.add_css_class("accent")
         lbl.set_valign(Gtk.Align.CENTER)
@@ -680,7 +680,7 @@ class MainWindow(Adw.Window):
         grid.attach(self.btn_scan_folder, 1, 0, 1, 1)
         
         # Database
-        btn_content_db = Adw.ButtonContent(icon_name="server-database-symbolic", label="Database")
+        btn_content_db = Adw.ButtonContent(icon_name="network-server-symbolic", label="Database")
         self.btn_db = Gtk.Button()
         self.btn_db.set_child(btn_content_db)
         self.btn_db.connect("clicked", self.on_database_clicked)
