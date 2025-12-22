@@ -626,22 +626,29 @@ class MainWindow(Adw.Window):
         self.nav_view.add(self.home_page)
 
         # 1. Branding (Logo + Status)
-        # Check for icon
-        icon_name = "clambite"
-        # Fallback if theme icon not present
-        if not Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).has_icon("clambite"):
-             icon_name = "security-high-symbolic" # Placeholder if file not found/installed
-
         logo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         logo_box.set_vexpand(True)
         logo_box.set_valign(Gtk.Align.CENTER)
+
+        # Get the absolute path to the directory where this script (ui.py) is located
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        local_icon_path = os.path.join(base_dir, "clambite.svg")
         
-        if os.path.exists("clambite.svg"):
-            img = Gtk.Image.new_from_file("clambite.svg")
+        img = Gtk.Image()
+        
+        # Priority 1: Check if the svg exists next to the script (installed location)
+        if os.path.exists(local_icon_path):
+            img.set_from_file(local_icon_path)
             img.set_pixel_size(256)
+            
+        # Priority 2: Check if the icon is installed in the system theme
+        elif Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).has_icon("clambite"):
+            img.set_from_icon_name("clambite")
+            img.set_pixel_size(256)
+            
+        # Priority 3: Fallback generic icon
         else:
-            # Fallback
-            img = Gtk.Image.new_from_icon_name("security-high-symbolic")
+            img.set_from_icon_name("security-high-symbolic")
             img.set_pixel_size(96)
             
         logo_box.append(img)
