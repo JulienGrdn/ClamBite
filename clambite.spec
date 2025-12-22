@@ -37,6 +37,11 @@ mkdir -p %{buildroot}%{_datadir}/%{name}
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
 mkdir -p %{buildroot}%{_datadir}/applications
+mkdir -p ~/.config/clambite
+mkdir -p ~/.config/clambite/clam-db
+mkdir -p ~/.config/clambite/clam-db/db
+mkdir -p ~/.config/clambite/logs
+
 
 # 2. Install Python source files to /usr/share/clambite/
 install -m 644 clambite.py %{buildroot}%{_datadir}/%{name}/
