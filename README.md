@@ -25,7 +25,18 @@
 
 ### Fedora / RPM-based Systems (COPR)
 
-*Coming soon.*
+You can install ClamBite and its extensions directly from the COPR repository.
+
+```bash
+# 1. Enable the repository
+sudo dnf copr enable juliengrdn/clambite
+
+# 2. Install the application
+sudo dnf install clambite
+
+# 3. (Optional) Install Nautilus right-click integration
+sudo dnf install clambite-nautilus-extension
+```
 
 ### Manual Installation
 
