@@ -10,7 +10,7 @@ from ui import MainWindow
 
 class ClamAVApp(Adw.Application):
     def __init__(self):
-        super().__init__(application_id="com.github.julienGrdn.ClamBite",
+        super().__init__(application_id="com.github.juliengrdn.clambite",
                          flags=Gio.ApplicationFlags.HANDLES_OPEN | Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.target_file = None
 
