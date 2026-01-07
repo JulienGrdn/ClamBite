@@ -83,5 +83,5 @@ EOF
 %{_datadir}/icons/hicolor/scalable/apps/%{name}.svg
 
 %changelog
-* Mon Dec 22 2025 JulienGrdn - 1.1-2
+* Wed Jan 07 2026 JulienGrdn - 1.1-2
 - Initial package release for Fedora
