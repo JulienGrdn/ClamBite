@@ -5,8 +5,16 @@ from datetime import datetime, timedelta
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, GLib, Gio, GObject, Pango, Gdk
-from backend import ScannerThread
+from backend import ScannerThread, safe_read_file
 from parsers import ScanParser, UpdateParser
+
+
+def _safe_read_file(path):
+    # Delegate to the robust implementation in backend or keep a local copy.
+    # Since we imported safe_read_file from backend, we can just use it.
+    # However, existing code expects string return, backend's returns None on failure.
+    content = safe_read_file(path)
+    return content if content is not None else ""
 
 class LogWindow(Adw.Window):
     def __init__(self, parent_window, buffer):
@@ -273,7 +281,7 @@ class UpdateResultPage(Adw.NavigationPage):
 
 
 class DatabasePage(Adw.NavigationPage):
-    def __init__(self, nav_view, on_update_callback):
+    def __init__(self, nav_view, on_update_callback, is_busy=False):
         super().__init__(title="Database", tag="database_page")
         self.nav_view = nav_view
         self.on_update_callback = on_update_callback
@@ -334,6 +342,11 @@ class DatabasePage(Adw.NavigationPage):
         self.btn_update.add_css_class("suggested-action")
         self.btn_update.add_css_class("pill")
         self.btn_update.set_valign(Gtk.Align.CENTER)
+
+        if is_busy:
+            self.btn_update.set_sensitive(False)
+            self.btn_update.set_tooltip_text("Operation in progress")
+
         self.btn_update.connect("clicked", self.on_update_clicked)
         
         action_row.add_suffix(self.btn_update)
@@ -458,9 +471,9 @@ class DatabasePage(Adw.NavigationPage):
         update_logs = [f for f in os.listdir(log_dir) if f.startswith("update_") and f.endswith(".log")]
         if not update_logs: return ""
         update_logs.sort(reverse=True)
-        try:
-            with open(os.path.join(log_dir, update_logs[0]), "r") as f: return f.read()
-        except: return ""
+        
+        # Security: Use safe read
+        return _safe_read_file(os.path.join(log_dir, update_logs[0]))
         
     def on_update_activated(self, content):
         try:
@@ -565,33 +578,35 @@ class HistoryPage(Adw.NavigationPage):
         if not filename.startswith("scan_"):
             return "Database Update"
             
-        try:
-            with open(os.path.join(log_dir, filename), "r") as f:
-                # Read first few lines to find target
-                for i in range(5):
-                    line = f.readline()
-                    if "Starting Scan:" in line:
-                        # Format: --- Starting Scan: /path/to/target ---
-                        return line.split("Starting Scan:")[1].replace("---", "").strip()
-        except:
-            pass
-            
+        full_path = os.path.join(log_dir, filename)
+        
+        # Use safe_read_file to avoid TOCTOU on symlinks
+        # We only need the first few lines, but safe_read_file reads all.
+        # It's fine for logs.
+        content = safe_read_file(full_path, max_bytes=4096)
+        
+        if content:
+            lines = content.splitlines()
+            for i in range(min(5, len(lines))):
+                line = lines[i]
+                if "Starting Scan:" in line:
+                    # Format: --- Starting Scan: /path/to/target ---
+                    return line.split("Starting Scan:")[1].replace("---", "").strip()
+
         return filename.replace(prefix, "").replace(".log", "")
 
     def on_row_activated(self, row, filename):
         path = os.path.join(self.log_dir, filename)
-        try:
-            with open(path, "r") as f:
-                content = f.read()
-                
-                if filename.startswith("scan_"):
-                    page = ScanResultPage(content)
-                else:
-                    page = UpdateResultPage(content)
-                    
-                self.nav_view.push(page)
-        except Exception as e:
-            print(f"Error reading log: {e}")
+        content = _safe_read_file(path)
+        if not content:
+            return
+
+        if filename.startswith("scan_"):
+            page = ScanResultPage(content)
+        else:
+            page = UpdateResultPage(content)
+            
+        self.nav_view.push(page)
 
 class MainWindow(Adw.Window):
     def __init__(self, app, target_path=None):
@@ -733,7 +748,8 @@ class MainWindow(Adw.Window):
 
     def on_database_clicked(self, btn):
         # Open Database View
-        page = DatabasePage(self.nav_view, lambda: self.start_operation('update', None))
+        is_busy = self.scanner_thread and self.scanner_thread.is_alive()
+        page = DatabasePage(self.nav_view, lambda: self.start_operation('update', None), is_busy=is_busy)
         self.nav_view.push(page)
         
     def on_update_clicked(self, btn):
@@ -871,7 +887,7 @@ class MainWindow(Adw.Window):
             else:
                 return f"Database updated {delta_days} days ago."
         except Exception as e:
-            print(f"Date Parse Error: {e}")
+            # print(f"Date Parse Error: {e}") 
             return "Status available (Check logs)"
 
     def prompt_update_before_scan(self, mode, path):
@@ -994,5 +1010,3 @@ class MainWindow(Adw.Window):
     def set_controls_sensitive(self, sensitive):
         self.btn_scan_file.set_sensitive(sensitive)
         self.btn_scan_folder.set_sensitive(sensitive)
-        self.btn_db.set_sensitive(sensitive)
-        self.btn_logs.set_sensitive(sensitive)
