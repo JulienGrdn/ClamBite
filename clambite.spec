@@ -1,6 +1,6 @@
 Name:           clambite
-Version:        1.0
-Release:        1%{?dist}
+Version:        1.1
+Release:        2%{?dist}
 Summary:        A modern ClamAV GUI for AV scans, using GTK4 and LibAdwaita
 
 License:        MIT
@@ -83,5 +83,5 @@ EOF
 %{_datadir}/icons/hicolor/scalable/apps/%{name}.svg
 
 %changelog
-* Mon Dec 22 2025 JulienGrdn - 1.0-1
+* Mon Dec 22 2025 JulienGrdn - 1.1-2
 - Initial package release for Fedora
